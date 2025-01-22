@@ -18,8 +18,20 @@ fn run() -> anyhow::Result<()> {
     // println!("best block hash: {:?}\n", h);
     // let m = c.get_mempool_info()?;
     // println!("mempool info: {:?}\n", m);
-    // let m = c.get_raw_mempool()?;
-    // let m_v = c.get_raw_mempool_verbose()?;
+    let m = c.get_raw_mempool()?;
+    let m_v = c.get_raw_mempool_verbose()?;
+    for txid in m {
+        let tx = &m_v[&txid];
+        let fee_rate_base = tx.fees.base.to_sat() as f64 / tx.vsize as f64;
+        let fee_rate_ancestor = tx.fees.ancestor.to_sat() as f64 / tx.ancestor_size as f64;
+        if 1 < tx.ancestor_count {
+            println!(
+                "{} base: {:.3} sat/vB ancestor: {:.3} sat/vB ancestors: {}",
+                txid, fee_rate_base, fee_rate_ancestor, tx.ancestor_count
+            );
+            println!("{:?}", tx);
+        }
+    }
     let template = c.get_block_template(
         GetBlockTemplateModes::Template,
         &[
